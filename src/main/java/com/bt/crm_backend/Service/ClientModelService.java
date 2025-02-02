@@ -39,6 +39,12 @@ public class ClientModelService {
 		return cModelRepo.findByClientName(clientName);
 	}
 
+	// Check if a client with the same name and company already exists
+	public boolean checkIfClientExists(String clientName, String clientCompany) {
+	    return cModelRepo.findByClientNameAndClientCompany(clientName, clientCompany).isPresent();
+	}
+
+	
 	// Get All Clients method
 	public List<ClientModel> getAllClients() {
 		return cModelRepo.findAll();

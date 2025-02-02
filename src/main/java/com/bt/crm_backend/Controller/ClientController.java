@@ -28,17 +28,34 @@ public class ClientController {
 	private ClientModelService cModelService;
 
 	// Get all clients
-		@GetMapping("/")
-		public ResponseEntity<List<ClientModel>> getAllClients() {
-			List<ClientModel> clients = cModelService.getAllClients();
-			return ResponseEntity.ok(clients);
-		}
+	@GetMapping("/")
+	public ResponseEntity<List<ClientModel>> getAllClients() {
+		List<ClientModel> clients = cModelService.getAllClients();
+		return ResponseEntity.ok(clients);
+	}
+
+	// Check if a client with the same name and company already exists
+	@GetMapping("/check-existence")
+	public ResponseEntity<Boolean> checkClientExists(@RequestParam String clientName, 
+	                                                 @RequestParam String clientCompany) {
+	    boolean exists = cModelService.checkIfClientExists(clientName, clientCompany);
+	    return ResponseEntity.ok(exists);
+	}
+
 	
 	// Add a new client (without files)
 	@PostMapping("/add-client")
-	public ResponseEntity<ClientModel> addClient(@RequestBody ClientModel client) {
-		ClientModel savedClient = cModelService.addClient(client);
-		return ResponseEntity.ok(savedClient);
+	public ResponseEntity<?> addClient(@RequestBody ClientModel client) {
+	    // Check if the client already exists
+	    boolean clientExists = cModelService.checkIfClientExists(client.getClientName(), client.getClientCompany());
+	    if (clientExists) {
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+	                             .body("Client with the same name and company already exists!");
+	    }
+
+	    // Add the new client
+	    ClientModel savedClient = cModelService.addClient(client);
+	    return ResponseEntity.ok(savedClient);
 	}
 
 	// Get client by name
@@ -63,28 +80,27 @@ public class ClientController {
 			return ResponseEntity.status(500).body(null);
 		}
 	}
-	
+
 	// Get all files associated with a client
-    @GetMapping("/{clientId}/files")
-    public ResponseEntity<List<ClientFile>> getFilesByClientId(@PathVariable int clientId) {
-        List<ClientFile> clientFiles = cModelService.getFilesByClientId(clientId);
-        if (clientFiles.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // No files found for client
-        }
-        return ResponseEntity.ok(clientFiles);
-    }
-    
- // Get a particular file for a client by fileId
-    @GetMapping("/{clientId}/files/{fileId}")
-    public ResponseEntity<ClientFile> getFileByClientIdAndFileId(@PathVariable int clientId,
-                                                                 @PathVariable int fileId) {
-        try {
-            ClientFile clientFile = cModelService.getFileByClientIdAndFileId(clientId, fileId);
-            return ResponseEntity.ok(clientFile);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // File not found
-        }
-    }
+	@GetMapping("/{clientId}/files")
+	public ResponseEntity<List<ClientFile>> getFilesByClientId(@PathVariable int clientId) {
+		List<ClientFile> clientFiles = cModelService.getFilesByClientId(clientId);
+		if (clientFiles.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // No files found for client
+		}
+		return ResponseEntity.ok(clientFiles);
+	}
+
+	// Get a particular file for a client by fileId
+	@GetMapping("/{clientId}/files/{fileId}")
+	public ResponseEntity<ClientFile> getFileByClientIdAndFileId(@PathVariable int clientId, @PathVariable int fileId) {
+		try {
+			ClientFile clientFile = cModelService.getFileByClientIdAndFileId(clientId, fileId);
+			return ResponseEntity.ok(clientFile);
+		} catch (RuntimeException e) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // File not found
+		}
+	}
 
 	// Delete a specific file (by fileId)
 	@DeleteMapping("/{clientId}/delete-file/{fileId}")

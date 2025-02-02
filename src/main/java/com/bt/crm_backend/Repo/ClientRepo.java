@@ -11,6 +11,7 @@ import com.bt.crm_backend.Model.BtUser;
 public interface ClientRepo extends JpaRepository<BtUser, Integer> {
 
 	BtUser findByUsername(String username);
+	
 }
 
 
